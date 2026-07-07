@@ -8,9 +8,16 @@
     :root {
       --bg: #ffffff; --fg: #1c1c1e; --muted: #6b6b70; --accent: #f7931a; --rule: #e5e5ea;
     }
+    :root[data-theme="dark"] { --bg: #121214; --fg: #ececef; --muted: #9a9aa0; --accent: #f7931a; --rule: #2a2a2e; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #121214; --fg: #ececef; --muted: #9a9aa0; --accent: #f7931a; --rule: #2a2a2e; }
+      :root:not([data-theme="light"]) { --bg: #121214; --fg: #ececef; --muted: #9a9aa0; --accent: #f7931a; --rule: #2a2a2e; }
     }
+    .theme-toggle {
+      position: fixed; top: 18px; right: 20px; width: 40px; height: 40px; padding: 0;
+      border: 1px solid var(--rule); border-radius: 50%; background: var(--bg); color: var(--fg);
+      font-size: 17px; line-height: 1; cursor: pointer; transition: border-color 0.15s ease;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -29,8 +36,19 @@
     a .meta { display: block; color: var(--muted); font-size: 0.85rem; }
     footer { margin-top: 28px; color: var(--muted); font-size: 0.82rem; }
   </style>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'dark' || theme === 'light') {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+      } catch (error) {}
+    })();
+  </script>
 </head>
 <body>
+  <button class="theme-toggle" type="button" aria-label="Switch theme">🌙</button>
   <div class="card">
     <h1>Ondřej Stárek</h1>
     <p>Personal projects &amp; apps.</p>
@@ -46,5 +64,29 @@
     </div>
     <footer>© 2026 Ondřej Stárek</footer>
   </div>
+  <script>
+    (function () {
+      var button = document.querySelector('.theme-toggle');
+      var media = window.matchMedia('(prefers-color-scheme: dark)');
+      function effectiveTheme() {
+        var override = document.documentElement.getAttribute('data-theme');
+        if (override === 'dark' || override === 'light') { return override; }
+        return media.matches ? 'dark' : 'light';
+      }
+      function renderIcon() {
+        var dark = effectiveTheme() === 'dark';
+        button.textContent = dark ? '☀️' : '🌙';
+        button.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+      button.addEventListener('click', function () {
+        var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (error) {}
+        renderIcon();
+      });
+      media.addEventListener('change', renderIcon);
+      renderIcon();
+    })();
+  </script>
 </body>
 </html>
